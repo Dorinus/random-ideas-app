@@ -44,17 +44,25 @@ router.post('/', async (req, res) => {
 //Update idea
 router.put('/:id', async (req, res) => {
   try {
-    const updatedIdea = await Idea.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: {
-          text: req.body.text,
-          tag: req.body.tag,
+    const idea = await Idea.findById(req.params.id);
+
+    if (idea.username === req.body.username) {
+      const updatedIdea = await Idea.findByIdAndUpdate(
+        req.params.id,
+        {
+          $set: {
+            text: req.body.text,
+            tag: req.body.tag,
+          },
         },
-      },
-      { new: true }
-    );
-    res.send(updatedIdea);
+        { new: true }
+      );
+      res.send(updatedIdea);
+    }
+
+    if (idea.username !== req.body.username) {
+      return res.status(403).send('You can only update your own ideas');
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
@@ -64,36 +72,19 @@ router.put('/:id', async (req, res) => {
 //Delete idea
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedIdea = await Idea.findByIdAndDelete(req.params.id);
-    res.send(deletedIdea);
+    const idea = await Idea.findById(req.params.id);
+    if (idea.username !== req.body.username) {
+      return res.status(403).send('You can only delete your own ideas');
+    }
+
+    if (idea.username === req.body.username) {
+      const deletedIdea = await Idea.findByIdAndDelete(req.params.id);
+      res.send(deletedIdea);
+    }
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
   }
 });
-
-const ideas = [
-  {
-    id: 1,
-    text: 'Positive NewsLetter, a newsletter that only shares positive, uplifting news',
-    tag: 'Technology',
-    username: 'TonyStark',
-    date: '2022-01-02',
-  },
-  {
-    id: 2,
-    text: 'Milk cartons that turn a different color the older that your milk is getting',
-    tag: 'Inventions',
-    username: 'SteveRogers',
-    date: '2022-01-02',
-  },
-  {
-    id: 3,
-    text: 'ATM location app which lets you know where the closest ATM is and if it is in service',
-    tag: 'Software',
-    username: 'BruceBanner',
-    date: '2022-01-02',
-  },
-];
 
 module.exports = router;
